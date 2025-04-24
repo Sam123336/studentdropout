@@ -1,107 +1,141 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <h1 class="text-2xl font-semibold mb-6">📊 Dashboard</h1>
+<div class="min-h-screen bg-gray-100 p-4">
+  <h1 class="text-2xl font-bold text-center mb-6 text-indigo-700">DROPOUT ANALYSER</h1>
 
-    {{-- Summary Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-sm">
-        <div class="bg-white shadow rounded-2xl p-4 flex items-center gap-4">
-            <div class="text-3xl">👤</div>
-            <div>
-                <p class="text-gray-500 text-xs">TOTAL STUDENTS</p>
-                <p class="font-semibold text-lg">
-                    {{ isset($dropouts, $enrolled) ? $dropouts + $enrolled : 'N/A' }}
-                </p>
-            </div>
-        </div>
-
-        <div class="bg-white shadow rounded-2xl p-4 flex items-center gap-4">
-            <div class="text-3xl">📉</div>
-            <div>
-                <p class="text-gray-500 text-xs">DROPOUT RATE</p>
-                <p class="font-semibold text-lg">
-                    {{ isset($dropouts, $enrolled) && ($dropouts + $enrolled) > 0 ? round(($dropouts / ($dropouts + $enrolled)) * 100, 2) . '%' : 'N/A' }}
-                </p>
-            </div>
-        </div>
-
-        <div class="bg-white shadow rounded-2xl p-4 flex items-center gap-4">
-            <div class="text-3xl">📈</div>
-            <div>
-                <p class="text-gray-500 text-xs">PREDICTION RESULT</p>
-                <p class="font-semibold text-lg">
-                    {{ $percentage !== null ? $percentage . '%' : 'No prediction' }}
-                </p>
-            </div>
-        </div>
+  {{-- Summary Cards --}}
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6">
+    <div class="bg-white rounded-lg p-3 shadow-sm text-center">
+      <div class="text-xs text-gray-500 mb-1">TOTAL STUDENTS</div>
+      <div class="text-lg font-bold">{{ number_format($dropouts + $enrolled) }}</div>
     </div>
-
-    {{-- Charts --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-sm">
-        <div class="bg-white p-4 rounded-2xl shadow">
-            <h2 class="text-sm font-semibold mb-2">Dropout vs Enrolled</h2>
-            {!! $chart->container() !!}
-        </div>
-
-        <div class="bg-white p-4 rounded-2xl shadow">
-            <h2 class="text-sm font-semibold mb-2">Dropout Trends (Monthly)</h2>
-            <div class="h-64 w-full">
-                <canvas id="dropoutTrendsChart"></canvas>
-            </div>
-        </div>
+    <div class="bg-white rounded-lg p-3 shadow-sm text-center">
+      <div class="text-xs text-gray-500 mb-1">DROPOUT RATE</div>
+      <div class="text-lg font-bold">{{ $dropouts + $enrolled > 0 ? round(($dropouts / ($dropouts + $enrolled)) * 100, 2) : 0 }}%</div>
     </div>
-
-    {{-- Region-Wise Dropout Table --}}
-    <div class="bg-white mt-6 p-4 rounded-2xl shadow text-sm">
-        <h2 class="text-sm font-semibold mb-4">Dropouts by Region</h2>
-        <table class="table-auto w-full text-left">
-            <thead>
-                <tr class="text-gray-500 text-xs border-b">
-                    <th class="pb-2">Region</th>
-                    <th class="pb-2">Dropout Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($dropoutData as $data)
-                <tr class="border-b">
-                    <td class="py-2">{{ $data->region }}</td>
-                    <td class="py-2">{{ $data->dropout_count }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <div class="bg-white rounded-lg p-3 shadow-sm text-center">
+      <div class="text-xs text-gray-500 mb-1">PREDICTED DROPOUTS</div>
+      <div class="text-lg font-bold">{{ $percentage ?? 'N/A' }}</div>
     </div>
-</div>
+    <div class="bg-white rounded-lg p-3 shadow-sm text-center">
+      <div class="text-xs text-gray-500 mb-1">DROPOUT RATE BY YEAR</div>
+      <div class="text-xs text-blue-500">see chart →</div>
+    </div>
+  </div>
 
-{{-- Scripts --}}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-{{ $chart->script() }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const ctx = document.getElementById('dropoutTrendsChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode($dropoutTrends->pluck('label')) !!},
-            datasets: [{
-                label: 'Dropouts',
-                data: {!! json_encode($dropoutTrends->pluck('value')) !!},
-                backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                fill: true,
-                tension: 0.4
-            }]
+  {{-- Charts Row --}}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    {{-- Dropouts by Department --}}
+    <div class="bg-white p-3 rounded-lg shadow-sm">
+      <h3 class="text-sm font-semibold mb-2 text-gray-700">Dropouts by Region</h3>
+      <div class="h-40">
+        <canvas id="regionChart"></canvas>
+      </div>
+    </div>
+    
+    {{-- Dropout Reasons --}}
+    <div class="bg-white p-3 rounded-lg shadow-sm">
+      <h3 class="text-sm font-semibold mb-2 text-gray-700">Dropout Trends</h3>
+      <div class="h-40">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  {{-- Student Table --}}
+  <div class="bg-white p-3 rounded-lg shadow-sm">
+    <h3 class="text-sm font-semibold mb-2 text-gray-700">STUDENT LIST</h3>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-xs">
+        <thead>
+          <tr class="border-b text-gray-600">
+            <th class="py-1 px-2 text-left">Name</th>
+            <th class="py-1 px-2 text-left">Region</th>
+            <th class="py-1 px-2 text-left">Age</th>
+            <th class="py-1 px-2 text-left">Grade</th>
+            <th class="py-1 px-2 text-left">Status</th>
+            <th class="py-1 px-2 text-left">Risk Level</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($students as $student)
+          <tr class="border-b">
+            <td class="py-1 px-2">{{ $student->name ?? 'N/A' }}</td>
+            <td class="py-1 px-2">{{ $student->region }}</td>
+            <td class="py-1 px-2">{{ $student->age }}</td>
+            <td class="py-1 px-2">{{ $student->grade_avg }}</td>
+            <td class="py-1 px-2">
+              <span class="{{ $student->dropout_status ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }} px-1 rounded">
+                {{ $student->dropout_status ? 'Dropped' : 'Enrolled' }}
+              </span>
+            </td>
+            <td class="py-1 px-2">
+              @php
+                $risk = $student->grade_avg < 70 ? 'High' : 
+                       ($student->grade_avg < 80 ? 'Medium' : 'Low');
+              @endphp
+              <span class="{{ 
+                $risk === 'High' ? 'bg-red-100 text-red-800' : 
+                ($risk === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800') 
+              }} px-1 rounded">
+                {{ $risk }}
+              </span>
+            </td>
+          </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Region Chart
+    new Chart(document.getElementById('regionChart'), {
+      type: 'bar',
+      data: {
+        labels: @json($dropoutData->pluck('region')),
+        datasets: [{
+          label: 'Dropouts',
+          data: @json($dropoutData->pluck('dropout_count')),
+          backgroundColor: '#3b82f6'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true }
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: { beginAtZero: true }
-            }
+        plugins: {
+          legend: { display: false }
         }
+      }
     });
-</script>
+
+    // Trend Chart
+    new Chart(document.getElementById('trendChart'), {
+      type: 'line',
+      data: {
+        labels: @json($dropoutTrends->pluck('label')),
+        datasets: [{
+          label: 'Dropouts',
+          data: @json($dropoutTrends->pluck('value')),
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  </script>
+</div>
 @endsection

@@ -34,6 +34,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
     Route::post('/blogs', [BlogController::class, 'store'])->name('blogs.store');
     Route::post('/predict-run', [BlogController::class, 'predict'])->name('predict.run');
+    
+    // Add explicit like/unlike routes
+    Route::post('/blogs/{id}/like', [BlogController::class, 'like'])->name('blogs.like');
+    Route::post('/blogs/{id}/unlike', [BlogController::class, 'unlike'])->name('blogs.unlike');
 });
 
 // Posts
@@ -54,5 +58,6 @@ Route::post('/blogs', [BlogController::class, 'store'])->name('blogs.store');
 // Show public blogs
 Route::get('/public-blogs', [BlogController::class, 'public'])->name('blogs.public');
 Route::get('/blogs/{id}', [BlogController::class, 'show'])->name('blogs.show');
+Route::post('/blogs/{id}/comments', [BlogController::class, 'storeComment'])->name('blogs.comment');
 // Authentication Routes
 require __DIR__.'/auth.php';
