@@ -18,10 +18,15 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Dashboard (GET and POST for prediction on same route)
-Route::match(['get', 'post'], '/dashboard', [DashboardController::class, 'index'])
+// Dashboard route
+Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+// Dashboard prediction route (POST)
+Route::post('/dashboard/predict', [DashboardController::class, 'predict'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.predict');
 
 // Students
 Route::middleware('auth')->group(function () {
