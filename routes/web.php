@@ -59,7 +59,9 @@ Route::get('/blogs/create', [BlogController::class, 'create'])->name('blogs.crea
 
 // Store new blog post
 Route::post('/blogs', [BlogController::class, 'store'])->name('blogs.store');
-
+Route::get('/about',function(){
+    return view('about');
+});
 // Show public blogs
 Route::get('/public-blogs', [BlogController::class, 'public'])->name('blogs.public');
 Route::get('/blogs/{id}', [BlogController::class, 'show'])->name('blogs.show');
