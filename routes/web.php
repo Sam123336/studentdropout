@@ -6,6 +6,7 @@ use App\Http\Controllers\AddStudentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\GoogleAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,5 +67,10 @@ Route::get('/about',function(){
 Route::get('/public-blogs', [BlogController::class, 'public'])->name('blogs.public');
 Route::get('/blogs/{id}', [BlogController::class, 'show'])->name('blogs.show');
 Route::post('/blogs/{id}/comments', [BlogController::class, 'storeComment'])->name('blogs.comment');
+
+// Google OAuth Login
+Route::get('auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('google.login');
+Route::get('auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
+
 // Authentication Routes
 require __DIR__.'/auth.php';

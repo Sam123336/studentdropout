@@ -11,6 +11,7 @@
         "binshops/laravel-blog": "^10.0",
         "consoletvs/charts": "^6.0",
         "laravel/framework": "^12.0",
+        "laravel/socialite": "^5.20",
         "laravel/tinker": "^2.10.1",
         "league/csv": "^9.23"
     },
